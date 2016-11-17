@@ -1,0 +1,17 @@
+hash: d8a5ccaf9dfb22588458f43bce0fd6f8504f6433aedde740d6e1ea10d8df1a38
+updated: 2016-11-17T01:36:08.474118531+01:00
+imports:
+- name: github.com/cenk/backoff
+  version: 32cd0c5b3aef12c76ed64aaf678f6c79736be7dc
+- name: github.com/juju/errgo
+  version: 08cceb5d0b5331634b9826762a8fd53b29b86ad8
+- name: github.com/the-anna-project/spec
+  version: e396e1a44aef51cc90466fccbdf965c3dc40cf2d
+  subpackages:
+  - object
+  - service
+- name: golang.org/x/net
+  version: 4971afdc2f162e82d185353533d3cf16188a9f4e
+  subpackages:
+  - context
+testImports: []
