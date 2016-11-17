@@ -1,0 +1,9 @@
+package: github.com/the-anna-project/random
+import:
+- package: github.com/cenk/backoff
+  version: ~1.0.0
+- package: github.com/juju/errgo
+- package: github.com/the-anna-project/spec
+  subpackages:
+  - object
+  - service
