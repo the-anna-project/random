@@ -6,8 +6,7 @@ go:
 - 1.7
 
 install:
-  - go get -d -v
-  - go build
+  - go build .
 
 script:
 - go test -race -covermode=atomic -coverprofile=coverage.txt
