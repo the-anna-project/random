@@ -8,57 +8,81 @@ import (
 	"time"
 
 	"github.com/cenk/backoff"
-
-	objectspec "github.com/the-anna-project/spec/object"
-	servicespec "github.com/the-anna-project/spec/service"
 )
 
-// New creates a new random service.
-func New() servicespec.RandomService {
-	newService := &service{}
+// Config represents the configuration used to create a new ID service.
+type Config struct {
+	// Dependencies.
 
-	newService.backoffFactory = func() objectspec.Backoff {
-		return &backoff.StopBackOff{}
+	// BackoffFactory is supposed to be able to create a new spec.Backoff. Retry
+	// implementations can make use of this to decide when to retry.
+	BackoffFactory func() Backoff
+	// RandFactory represents a service returning random values. Here e.g.
+	// crypto/rand.Int can be used.
+	RandFactory func(rand io.Reader, max *big.Int) (n *big.Int, err error)
+
+	// Settings.
+
+	// RandReader represents an instance of a cryptographically strong
+	// pseudo-random generator. Here e.g. crypto/rand.Reader can be used.
+	RandReader io.Reader
+	// Timeout represents the deadline being waited during random number creation
+	// before returning a timeout error.
+	Timeout time.Duration
+}
+
+// DefaultConfig provides a default configuration to create a new ID service
+// by best effort.
+func DefaultConfig() Config {
+	return Config{
+		// Dependencies.
+		BackoffFactory: func() Backoff {
+			return &backoff.StopBackOff{}
+		},
+		RandFactory: rand.Int,
+
+		// Settings.
+		RandReader: rand.Reader,
+		Timeout:    1 * time.Second,
 	}
-	newService.randFactory = rand.Int
-	newService.randReader = rand.Reader
-	newService.timeout = 1 * time.Second
+}
 
-	return newService
+// New creates a new configured ID service.
+func New(config Config) (Service, error) {
+	// Dependencies.
+	if config.BackoffFactory == nil {
+		return nil, maskAnyf(invalidConfigError, "backoff factory must not be empty")
+	}
+	if config.RandFactory == nil {
+		return nil, maskAnyf(invalidConfigError, "rand factory must not be empty")
+	}
+
+	// Settings.
+	if config.RandReader == nil {
+		return nil, maskAnyf(invalidConfigError, "rand reader must not be empty")
+	}
+
+	newService := &service{
+		// Dependencies.
+		backoffFactory: config.BackoffFactory,
+		randFactory:    config.RandFactory,
+
+		// Settings.
+		randReader: config.RandReader,
+		timeout:    config.Timeout,
+	}
+
+	return newService, nil
 }
 
 type service struct {
 	// Dependencies.
-
-	serviceCollection servicespec.ServiceCollection
+	backoffFactory func() Backoff
+	randFactory    func(rand io.Reader, max *big.Int) (n *big.Int, err error)
 
 	// Settings.
-
-	// backoffFactory is supposed to be able to create a new spec.Backoff. Retry
-	// implementations can make use of this to decide when to retry.
-	backoffFactory func() objectspec.Backoff
-	metadata       map[string]string
-	// randFactory represents a service returning random values. Here e.g.
-	// crypto/rand.Int can be used.
-	randFactory func(rand io.Reader, max *big.Int) (n *big.Int, err error)
-	// randReader represents an instance of a cryptographically strong
-	// pseudo-random generator. Here e.g. crypto/rand.Reader can be used.
 	randReader io.Reader
-	// timeout represents the deadline being waited during random number creation
-	// before returning a timeout error.
-	timeout time.Duration
-}
-
-func (s *service) Boot() {
-	id, err := s.Service().ID().New()
-	if err != nil {
-		panic(err)
-	}
-	s.metadata = map[string]string{
-		"id":   id,
-		"name": "random",
-		"type": "service",
-	}
+	timeout    time.Duration
 }
 
 func (s *service) CreateMax(max int) (int, error) {
@@ -113,28 +137,4 @@ func (s *service) CreateNMax(n, max int) ([]int, error) {
 	}
 
 	return result, nil
-}
-
-func (s *service) Metadata() map[string]string {
-	return s.metadata
-}
-
-func (s *service) Service() servicespec.ServiceCollection {
-	return s.serviceCollection
-}
-
-func (s *service) SetBackoffFactory(backoffFactory func() objectspec.Backoff) {
-	s.backoffFactory = backoffFactory
-}
-
-func (s *service) SetRandFactory(randFactory func(randReader io.Reader, max *big.Int) (n *big.Int, err error)) {
-	s.randFactory = randFactory
-}
-
-func (s *service) SetServiceCollection(serviceCollection servicespec.ServiceCollection) {
-	s.serviceCollection = serviceCollection
-}
-
-func (s *service) SetTimeout(timeout time.Duration) {
-	s.timeout = timeout
 }
