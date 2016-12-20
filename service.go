@@ -10,8 +10,9 @@ import (
 	"github.com/cenk/backoff"
 )
 
-// Config represents the configuration used to create a new ID service.
-type Config struct {
+// ServiceConfig represents the configuration used to create a new random
+// service.
+type ServiceConfig struct {
 	// Dependencies.
 
 	// BackoffFactory is supposed to be able to create a new spec.Backoff. Retry
@@ -31,10 +32,10 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// DefaultConfig provides a default configuration to create a new ID service
-// by best effort.
-func DefaultConfig() Config {
-	return Config{
+// DefaultServiceConfig provides a default configuration to create a new random
+// service by best effort.
+func DefaultServiceConfig() ServiceConfig {
+	return ServiceConfig{
 		// Dependencies.
 		BackoffFactory: func() Backoff {
 			return &backoff.StopBackOff{}
@@ -47,8 +48,8 @@ func DefaultConfig() Config {
 	}
 }
 
-// New creates a new configured ID service.
-func New(config Config) (Service, error) {
+// NewService creates a new configured random service.
+func NewService(config ServiceConfig) (Service, error) {
 	// Dependencies.
 	if config.BackoffFactory == nil {
 		return nil, maskAnyf(invalidConfigError, "backoff factory must not be empty")
