@@ -13,12 +13,12 @@ func Test_Service_CreateNMax_Error_RandFactory(t *testing.T) {
 
 	var randomService Service
 	{
-		randomConfig := DefaultConfig()
+		randomConfig := DefaultServiceConfig()
 		randomConfig.RandFactory = func(randReader io.Reader, max *big.Int) (n *big.Int, err error) {
 			return nil, maskAny(timeoutError)
 		}
 		randomConfig.Timeout = 10 * time.Millisecond
-		randomService, err = New(randomConfig)
+		randomService, err = NewService(randomConfig)
 		if err != nil {
 			panic(err)
 		}
@@ -38,13 +38,13 @@ func Test_Service_CreateNMax_Error_Timeout(t *testing.T) {
 
 	var randomService Service
 	{
-		randomConfig := DefaultConfig()
+		randomConfig := DefaultServiceConfig()
 		randomConfig.RandFactory = func(randReader io.Reader, max *big.Int) (n *big.Int, err error) {
 			time.Sleep(200 * time.Millisecond)
 			return rand.Int(randReader, max)
 		}
 		randomConfig.Timeout = 20 * time.Millisecond
-		randomService, err = New(randomConfig)
+		randomService, err = NewService(randomConfig)
 		if err != nil {
 			panic(err)
 		}
@@ -64,8 +64,8 @@ func Test_Service_CreateNMax_GenerateNNumbers(t *testing.T) {
 
 	var randomService Service
 	{
-		randomConfig := DefaultConfig()
-		randomService, err = New(randomConfig)
+		randomConfig := DefaultServiceConfig()
+		randomService, err = NewService(randomConfig)
 		if err != nil {
 			panic(err)
 		}
@@ -89,8 +89,8 @@ func Test_Service_CreateNMax_GenerateRandomNumbers(t *testing.T) {
 
 	var randomService Service
 	{
-		randomConfig := DefaultConfig()
-		randomService, err = New(randomConfig)
+		randomConfig := DefaultServiceConfig()
+		randomService, err = NewService(randomConfig)
 		if err != nil {
 			panic(err)
 		}
